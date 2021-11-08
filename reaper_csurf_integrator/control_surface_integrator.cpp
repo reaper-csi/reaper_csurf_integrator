@@ -2032,14 +2032,21 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_FeedbackProcessor::SetRGBValue(int r, int g, int b)
 {
-    if(lastRValue != r || lastGValue != g || lastBValue != b)
+    if(lastRValue != r)
     {
         lastRValue = r;
-        lastGValue = g;
-        lastBValue = b;
-        
         surface_->SendOSCMessage(this, oscAddress_ + "/rColor", r);
+    }
+    
+    if(lastGValue != g)
+    {
+        lastGValue = g;
         surface_->SendOSCMessage(this, oscAddress_ + "/gColor", g);
+    }
+    
+    if(lastBValue != b)
+    {
+        lastBValue = b;
         surface_->SendOSCMessage(this, oscAddress_ + "/bColor", b);
     }
 }
