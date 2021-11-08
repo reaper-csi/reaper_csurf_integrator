@@ -2275,7 +2275,7 @@ public:
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            return DAW::GetMediaTrackInfo_Value(track, "I_SOLO");
+            return DAW::GetMediaTrackInfo_Value(track, "I_SOLO") > 0 ? 1 : 0;
         else
             return 0.0;
     }
