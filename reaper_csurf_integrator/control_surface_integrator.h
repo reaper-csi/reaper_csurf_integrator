@@ -1372,18 +1372,6 @@ private:
         
         DAW:: SetProjExtState(0, "CSI", "PinnedTracks", pinnedTracks.c_str());
     }
-    
-    bool AreVCATopLeadsAndVCALeadsTheSame()
-    {
-        if(vcaTopLeadTracks_.size() != vcaLeadTracks_.size())
-            return false;
-        
-        for(int i = 0; i < vcaTopLeadTracks_.size(); i++)
-            if(vcaTopLeadTracks_[i] != vcaLeadTracks_[i])
-                return false;
-        
-        return true;
-    }
    
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
@@ -1643,8 +1631,18 @@ public:
             else
                 return nullptr;
         }
-        
-        
+        else
+        {
+            if(channelNumber < vcaLeadTracks_.size())
+                return vcaLeadTracks_[channelNumber];
+            else
+            {
+                channelNumber -= vcaLeadTracks_.size();
+                
+                if(channelNumber < vcaSpillTracks_.size())
+                    return vcaSpillTracks_[channelNumber];
+            }
+        }
         
         return nullptr;
     }
@@ -1664,10 +1662,12 @@ public:
     
     void ToggleVCASpill(MediaTrack* track)
     {
-        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) == vcaSpillTracks_.end())
-            vcaSpillTracks_.push_back(track);
+        auto it = find(vcaLeadTracks_.begin(), vcaLeadTracks_.end(), track);
+        
+        if(it == vcaLeadTracks_.end())
+            vcaLeadTracks_.push_back(track);
         else
-            vcaSpillTracks_.erase(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track));
+            vcaLeadTracks_.erase(it, vcaLeadTracks_.end());
     }
    
     void ToggleScrollLink(int targetChannel)
@@ -1795,14 +1795,17 @@ public:
 
         tracks_.clear();
         vcaTopLeadTracks_.clear();
+        vcaSpillTracks_.clear();
         selectedTracks_.clear();
         maxSendSlot_ = 0;
         maxReceiveSlot_ = 0;
         maxFXMenuSlot_ = 0;
-        
-        // Clean up vcaSpillTracks
-        vcaSpillTracks_.erase(remove_if(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), IsTrackPointerStale), vcaSpillTracks_.end());
 
+        MediaTrack* leadTrack = nullptr;
+        
+        if(vcaLeadTracks_.size() > 0)
+            leadTrack = vcaLeadTracks_.back();
+        
         // Get Visible Tracks
         for (int i = 1; i <= GetNumTracks(); i++)
         {
@@ -1831,27 +1834,20 @@ public:
                 if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                     selectedTracks_.push_back(track);
                 
+                tracks_.push_back(track);
+                
                 int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
                 
                 if(vcaMasterGroup != 0)
                     vcaTopLeadTracks_.push_back(track);
                 
-                if(vcaMode_)
+                if(leadTrack != nullptr)
                 {
-                    //int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
+                    int leadTrackVCAMasterGroup = DAW::GetSetTrackGroupMembership(leadTrack, "VOLUME_VCA_LEAD", 0, 0);
 
-                    if(vcaMasterGroup != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0) == 0) // Only top level Leads for now
-                    {
-                        tracks_.push_back(track);
-                        
-                        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) != vcaSpillTracks_.end()) // should spill followers for this lead
-                            for (int j = 1; j <= GetNumTracks(); j++)
-                                if(vcaMasterGroup == DAW::GetSetTrackGroupMembership(DAW::CSurf_TrackFromID(j, followMCP_), "VOLUME_VCA_FOLLOW", 0, 0)) // if this track is follower of lead
-                                    tracks_.push_back(DAW::CSurf_TrackFromID(j, followMCP_));
-                    }
+                    if(leadTrackVCAMasterGroup == DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0)) // if this track is follower of lead
+                        vcaSpillTracks_.push_back(track);
                 }
-                else
-                    tracks_.push_back(track);
             }
         }
 
