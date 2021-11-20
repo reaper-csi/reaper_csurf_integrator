@@ -1327,10 +1327,7 @@ void TrackNavigator::UnpinChannel()
 
 MediaTrack* TrackNavigator::GetTrack()
 {
-    if(pinnedTrack_ != nullptr)
-        return pinnedTrack_;
-    else
-        return manager_->GetTrackFromChannel(channelNum_ - bias_);
+    return manager_->GetTrackFromChannel(channelNum_, bias_, pinnedTrack_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
