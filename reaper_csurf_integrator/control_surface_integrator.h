@@ -1838,10 +1838,8 @@ public:
                     selectedTracks_.push_back(track);
                 
                 tracks_.push_back(track);
-                
-                int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
-                
-                if(vcaMasterGroup != 0)
+                               
+                if(DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0) != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0) == 0)
                     vcaTopLeadTracks_.push_back(track);
                 
                 if(leadTrack != nullptr)
