@@ -1332,8 +1332,7 @@ private:
     bool vcaMode_ = false;
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0;
-    int savedTrackOffset_ = 0;
-    int savedVCAOffset_ = 0;
+    int vcaTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> selectedTracks_;
     vector<MediaTrack*> vcaTopLeadTracks_;
@@ -1477,22 +1476,42 @@ public:
     
     void AdjustTrackBank(int amount)
     {
-        int numTracks = GetNumTracks();
-        
-        if(numTracks <= navigators_.size())
-            return;
-       
-        trackOffset_ += amount;
-        
-        if(trackOffset_ <  0)
-            trackOffset_ =  0;
-        
-        int top = numTracks - navigators_.size();
-        
-        if(trackOffset_ >  top)
-            trackOffset_ = top;
-        
-        DAW:: SetProjExtState(0, "CSI", "BankIndex", to_string(trackOffset_).c_str());
+        if(!vcaMode_)
+        {
+            int numTracks = GetNumTracks();
+            
+            if(numTracks <= navigators_.size())
+                return;
+           
+            trackOffset_ += amount;
+            
+            if(trackOffset_ <  0)
+                trackOffset_ =  0;
+            
+            int top = numTracks - navigators_.size();
+            
+            if(trackOffset_ >  top)
+                trackOffset_ = top;
+            
+            DAW:: SetProjExtState(0, "CSI", "BankIndex", to_string(trackOffset_).c_str());
+        }
+        else
+        {
+            int numTracks = vcaSpillTracks_.size() + vcaLeadTracks_.size();
+            
+            if(numTracks <= navigators_.size())
+                return;
+           
+            vcaTrackOffset_ += amount;
+            
+            if(vcaTrackOffset_ <  0)
+                vcaTrackOffset_ =  0;
+            
+            int top = numTracks - navigators_.size();
+            
+            if(vcaTrackOffset_ >  top)
+                vcaTrackOffset_ = top;
+        }
     }
     
     void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount)
@@ -1586,18 +1605,7 @@ public:
     
     void ToggleVCAMode()
     {
-        if(vcaMode_)
-        {
-            savedVCAOffset_ = trackOffset_;
-            trackOffset_ = savedTrackOffset_;
-            vcaMode_ = false;
-        }
-        else
-        {
-            savedTrackOffset_ = trackOffset_;
-            trackOffset_ = savedVCAOffset_;
-            vcaMode_ = true;
-        }
+        vcaMode_ = ! vcaMode_;
     }
     
     Navigator* GetNavigatorForChannel(int channelNum)
@@ -1639,6 +1647,8 @@ public:
             {
                 channelNumber -= vcaLeadTracks_.size();
                 
+                channelNumber += vcaTrackOffset_;
+                
                 if(channelNumber < vcaSpillTracks_.size())
                     return vcaSpillTracks_[channelNumber];
             }
@@ -1671,6 +1681,8 @@ public:
             vcaLeadTracks_.push_back(track);
         else
             vcaLeadTracks_.erase(it, vcaLeadTracks_.end());
+        
+        vcaTrackOffset_ = 0;
     }
    
     void ToggleScrollLink(int targetChannel)
