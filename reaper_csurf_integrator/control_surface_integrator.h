@@ -1662,6 +1662,9 @@ public:
     
     void ToggleVCASpill(MediaTrack* track)
     {
+        if(DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0) == 0)
+            return;
+               
         auto it = find(vcaLeadTracks_.begin(), vcaLeadTracks_.end(), track);
         
         if(it == vcaLeadTracks_.end())
