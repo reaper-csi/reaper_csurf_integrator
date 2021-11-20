@@ -1336,6 +1336,8 @@ private:
     int savedVCAOffset_ = 0;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> selectedTracks_;
+    vector<MediaTrack*> vcaTopLeadTracks_;
+    vector<MediaTrack*> vcaLeadTracks_;
     vector<MediaTrack*> vcaSpillTracks_;
     vector<Navigator*> navigators_;
     Navigator* const masterTrackNavigator_ = nullptr;
@@ -1371,6 +1373,18 @@ private:
         DAW:: SetProjExtState(0, "CSI", "PinnedTracks", pinnedTracks.c_str());
     }
     
+    bool AreVCATopLeadsAndVCALeadsTheSame()
+    {
+        if(vcaTopLeadTracks_.size() != vcaLeadTracks_.size())
+            return false;
+        
+        for(int i = 0; i < vcaTopLeadTracks_.size(); i++)
+            if(vcaTopLeadTracks_[i] != vcaLeadTracks_[i])
+                return false;
+        
+        return true;
+    }
+   
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
     masterTrackNavigator_(new MasterTrackNavigator(page_)),
@@ -1606,14 +1620,33 @@ public:
             return nullptr;
     }
     
-    MediaTrack* GetTrackFromChannel(int channelNumber)
+    MediaTrack* GetTrackFromChannel(int channelNumber, int bias, MediaTrack* pinnedTrack)
     {
-        int trackNumber = channelNumber + trackOffset_;
+        if(! vcaMode_)
+        {
+            if(pinnedTrack != nullptr)
+                return pinnedTrack;
+            else
+                channelNumber -= bias;
+            
+            int trackNumber = channelNumber + trackOffset_;
+            
+            if(tracks_.size() > trackNumber && DAW::ValidateTrackPtr(tracks_[trackNumber]))
+                return tracks_[trackNumber];
+            else
+                return nullptr;
+        }
+        else if(vcaLeadTracks_.size() == 0)
+        {
+            if(vcaTopLeadTracks_.size() > channelNumber && DAW::ValidateTrackPtr(vcaTopLeadTracks_[channelNumber]))
+                return vcaTopLeadTracks_[channelNumber];
+            else
+                return nullptr;
+        }
         
-        if(tracks_.size() > trackNumber && DAW::ValidateTrackPtr(tracks_[trackNumber]))
-            return tracks_[trackNumber];
-        else
-            return nullptr;
+        
+        
+        return nullptr;
     }
     
     MediaTrack* GetTrackFromId(int trackNumber)
@@ -1761,6 +1794,7 @@ public:
             trackOffset_ = top;
 
         tracks_.clear();
+        vcaTopLeadTracks_.clear();
         selectedTracks_.clear();
         maxSendSlot_ = 0;
         maxReceiveSlot_ = 0;
@@ -1797,9 +1831,14 @@ public:
                 if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                     selectedTracks_.push_back(track);
                 
+                int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
+                
+                if(vcaMasterGroup != 0)
+                    vcaTopLeadTracks_.push_back(track);
+                
                 if(vcaMode_)
                 {
-                    int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
+                    //int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
 
                     if(vcaMasterGroup != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0) == 0) // Only top level Leads for now
                     {
@@ -2347,7 +2386,6 @@ public:
     void RestorePinnedTracks() { trackNavigationManager_->RestorePinnedTracks(); }
     void ToggleVCAMode() { trackNavigationManager_->ToggleVCAMode(); }
     Navigator* GetNavigatorForChannel(int channelNum) { return trackNavigationManager_->GetNavigatorForChannel(channelNum); }
-    MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
     int GetIdFromTrack(MediaTrack* track) { return trackNavigationManager_->GetIdFromTrack(track); }
     void ToggleVCASpill(MediaTrack* track) { trackNavigationManager_->ToggleVCASpill(track); }
