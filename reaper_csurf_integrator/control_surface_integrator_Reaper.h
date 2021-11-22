@@ -299,10 +299,18 @@ public:
             return nullptr;
     }
     
-    static unsigned int GetSetTrackGroupMembership(MediaTrack* track, const char* groupname, unsigned int setmask, unsigned int setvalue)
+    static unsigned int GetTrackGroupMembership(MediaTrack* track, const char* groupname)
     {
         if(ValidateTrackPtr(track))
-            return ::GetSetTrackGroupMembership(track, groupname, setmask, setvalue);
+            return ::GetSetTrackGroupMembership(track, groupname, 0, 0);
+        else
+            return 0;
+    }
+
+    static unsigned int GetTrackGroupMembershipHigh(MediaTrack* track, const char* groupname)
+    {
+        if(ValidateTrackPtr(track))
+            return ::GetSetTrackGroupMembershipHigh(track, groupname, 0, 0);
         else
             return 0;
     }

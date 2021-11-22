@@ -1672,7 +1672,7 @@ public:
     
     void ToggleVCASpill(MediaTrack* track)
     {
-        if(DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0) == 0)
+        if(DAW::GetTrackGroupMembership(track, "VOLUME_VCA_LEAD") == 0 && DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_LEAD") == 0)
             return;
                
         auto it = find(vcaLeadTracks_.begin(), vcaLeadTracks_.end(), track);
@@ -1817,9 +1817,15 @@ public:
         maxFXMenuSlot_ = 0;
 
         MediaTrack* leadTrack = nullptr;
+        bitset<32> leadTrackVCALeaderGroup;
+        bitset<32> leadTrackVCALeaderGroupHigh;
         
         if(vcaLeadTracks_.size() > 0)
+        {
             leadTrack = vcaLeadTracks_.back();
+            leadTrackVCALeaderGroup = DAW::GetTrackGroupMembership(leadTrack, "VOLUME_VCA_LEAD");
+            leadTrackVCALeaderGroupHigh = DAW::GetTrackGroupMembershipHigh(leadTrack, "VOLUME_VCA_LEAD");
+        }
         
         // Get Visible Tracks
         for (int i = 1; i <= GetNumTracks(); i++)
@@ -1851,15 +1857,31 @@ public:
                 
                 tracks_.push_back(track);
                                
-                if(DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0) != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0) == 0)
+                if(DAW::GetTrackGroupMembership(track, "VOLUME_VCA_LEAD") != 0 && DAW::GetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW") == 0)
+                    vcaTopLeadTracks_.push_back(track);
+                
+                if(DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_LEAD") != 0 && DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_FOLLOW") == 0)
                     vcaTopLeadTracks_.push_back(track);
                 
                 if(leadTrack != nullptr)
                 {
-                    int leadTrackVCAMasterGroup = DAW::GetSetTrackGroupMembership(leadTrack, "VOLUME_VCA_LEAD", 0, 0);
+                    bool isFollower = false;
+                    
+                    bitset<32> leadTrackVCAFollowerGroup(DAW::GetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW"));
+                    bitset<32> leadTrackVCAFollowerGroupHigh(DAW::GetTrackGroupMembershipHigh(track, "VOLUME_VCA_FOLLOW"));
 
-                    if(leadTrackVCAMasterGroup == DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0)) // if this track is follower of lead
-                        vcaSpillTracks_.push_back(track);
+                    for(int i = 0; i < 32; i++)
+                    {
+                        if((leadTrackVCALeaderGroup[i] == 1 && leadTrackVCAFollowerGroup[i] == 1)
+                           || (leadTrackVCALeaderGroupHigh[i] == 1 && leadTrackVCAFollowerGroupHigh[i] == 1))
+                        {
+                            isFollower = true;
+                            break;
+                        }
+                    }
+                    
+                    if(isFollower)
+                            vcaSpillTracks_.push_back(track);
                 }
             }
         }
