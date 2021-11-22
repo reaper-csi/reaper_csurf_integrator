@@ -27,6 +27,7 @@
 #ifdef _WIN32
 #include "oscpkt.hh"
 #include "udp.hh"
+#include <bitset>
 #endif
 
 #include "control_surface_integrator_Reaper.h"
