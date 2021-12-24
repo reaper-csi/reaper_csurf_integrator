@@ -1131,7 +1131,7 @@ public:
         {
             auto it = find(usedWidgets.begin(), usedWidgets.end(), widget);
             
-            if ( it == widgets_.end() )
+            if (it == usedWidgets.end() )
                 widget->Clear();
         }
     }
