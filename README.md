@@ -28,14 +28,15 @@ CSI is designed to be as stateless as possible, reflecting what Reaper is doing.
 
 The following is a limited listing of controllers configurations have been created for:
 
-- Presonus Faderport 1/8/16
+- Presonus Faderport USB/8/16 (Classic Not Supported)
 - Mackie C4
 - DJ Tech Tools Midi Fighter Twister
 - Novation Lauch Control XL pad mini
 - BCF 2000
 - ICON Platform M+/B+, QCon Pro X/EX/G2, Nano
 - Behringer X Touch/EX/One/mini, FCB 1010, BCR/BCF 2000
-- Softube Console 1
+- Softube Console 
+- ~~Eucon~~ Note: Support was split into its [own project](https://github.com/reaper-csi/reaper_csurf_integrator).
 
 
 ### Project Links
