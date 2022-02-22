@@ -85,6 +85,14 @@
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions) _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <PreBuildEvent>
+      <Command>taskkill /f /fi "imagename eq Reaper.exe"</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y $(OutputPath)reaper_csurf_integrator.dll $(DevReaperPath)\UserPlugins\reaper_csurf_integrator64.dll
+powershell start-process "'$(DevReaperPath)\reaper.exe'"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
