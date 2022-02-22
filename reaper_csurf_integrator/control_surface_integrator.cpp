@@ -139,8 +139,6 @@ static oscpkt::UdpSocket* GetOutputSocketForAddressAndPort(string surfaceName, s
             return nullptr;
         }
         
-        newOutputSocket->bindTo(outputPort);
-        
         if ( ! newOutputSocket->isOk())
         {
             //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
