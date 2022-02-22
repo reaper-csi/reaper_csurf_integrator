@@ -816,6 +816,10 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         {
             feedbackProcessor = new MFT_RGB_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         }
+        else if (widgetClass == "FB_GP_Midi")
+        {
+            feedbackProcessor = new GP_Midi_FeedbackProcessor(surface, widget, tokenLines[i]);
+        }
         else if(widgetClass == "FB_FaderportRGB7Bit" && size == 4)
         {
             feedbackProcessor = new FaderportRGB7Bit_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
@@ -1526,6 +1530,10 @@ void ActionContext::UpdateWidgetValue(double value)
         currentRGBIndex_ = value == 0 ? 0 : 1;
         widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
     }
+    else if (supportsZoneFeedback_)
+    {
+        widget_->UpdateDataValue(FeedBackData_);
+    }
     else if(supportsTrackColor_)
     {
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
@@ -1950,6 +1958,12 @@ void  Widget::UpdateRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
         processor->SetRGBValue(r, g, b);
+}
+
+void  Widget::UpdateDataValue(vector<string> FeedbackData)
+{
+    for (auto processor : feedbackProcessors_)
+        processor->SetDataValue(FeedbackData);
 }
 
 void  Widget::ForceValue(double value)

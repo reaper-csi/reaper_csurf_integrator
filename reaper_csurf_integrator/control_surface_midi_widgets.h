@@ -2049,6 +2049,148 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GP_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<string> tokens_;
+    vector<MIDI_event_ex_t> onMessages_;
+    vector<MIDI_event_ex_t> offMessages_;
+    vector<MIDI_event_ex_t> lastMessages_;
+
+    static int strToHex(string valueStr)
+    {
+        return strtol(valueStr.c_str(), nullptr, 16);
+    }
+
+public:
+    virtual ~GP_Midi_FeedbackProcessor() {}
+    GP_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, vector<string> tokens) : Midi_FeedbackProcessor(surface, widget), tokens_(tokens) {
+
+        if (tokens_[0] != "FB_GP_Midi")
+            return;
+
+        vector<string> params = tokens_;
+        params.erase(params.begin());
+        ParseData(params);
+    }
+
+    void ParseData(vector<string> params)
+    {
+        if (params.size() == 0)
+            return;
+
+        for (vector<string>::iterator it = params.begin(); it != params.end(); ) {
+
+            if (!regex_match(*it, regex("([0-9A-Fa-f]{2})"))) {                 // Make sure 2 digit hex value
+                if (!(*it == ",")) {
+                    if (regex_match(*it, regex("([0-9A-Fa-f]{2},)"))) {          // Handle misplaced comma
+
+                        it = params.insert(it, (*it).substr(0, 2));
+                        ++it;
+                        *it = ",";
+
+                    }
+                    else if (regex_match(*it, regex("(,[0-9A-Fa-f]{2})"))) {     // Handle misplaced comma
+                        it = params.insert(it, ",");
+                        ++it;
+                        *it = (*it).substr(1, 2);
+                    }
+                    else
+                    {
+                        it = params.erase(it);                                  // Invalid Element so remove it
+                        continue;
+                    }
+                }
+            }
+            ++it;
+        }
+
+        offMessages_.clear();
+        onMessages_.clear();
+
+        bool isOffMessage = true;
+        for (int i = 0; i < params.size(); ) {
+            if (params[i] == ",") {
+                isOffMessage = false;
+                i++;
+            }
+            else
+            {
+                if (i + 2 < params.size()) {                         //Make sure we have a 3 byte Midi token
+
+                    if (isOffMessage) {
+                        offMessages_.push_back(MIDI_event_ex_t(strToHex(params[i]), strToHex(params[i + 1]), strToHex(params[i + 2])));
+                    }
+                    else {
+                        onMessages_.push_back(MIDI_event_ex_t(strToHex(params[i]), strToHex(params[i + 1]), strToHex(params[i + 2])));
+                    }
+                }
+                i = i + 3;
+            }
+        }
+    }
+
+    virtual void SetValue(double value) override
+    {
+        if (value == 0.0)
+        {
+            bool eql = false;
+            if (offMessages_.size() == lastMessages_.size()) {
+                eql = std::equal(offMessages_.begin(), offMessages_.end(), lastMessages_.begin());
+            }
+            if (!eql || lastMessages_.size() == 0) {
+                ForceValue(value);
+            }
+        }
+        else {
+            bool eql = false;
+            if (onMessages_.size() == lastMessages_.size()) {
+                eql = std::equal(onMessages_.begin(), onMessages_.end(), lastMessages_.begin());
+            }
+            if (!eql || lastMessages_.size() == 0) {
+                ForceValue(value);
+            }
+        }
+    }
+
+
+
+    virtual void ForceValue(double value) override
+    {
+        if (value == 0.0)
+        {
+            for (int i = 0; i < offMessages_.size(); i++) {
+                SendMidiMessage(offMessages_[i].midi_message[0], offMessages_[i].midi_message[1], offMessages_[i].midi_message[2]);
+            }
+            lastMessages_ = offMessages_;
+        }
+        else {
+            for (int i = 0; i < onMessages_.size(); i++) {
+                SendMidiMessage(onMessages_[i].midi_message[0], onMessages_[i].midi_message[1], onMessages_[i].midi_message[2]);
+            }
+            lastMessages_ = onMessages_;
+        }
+    }
+
+    virtual void SetDataValue(vector<string> params) {
+        ParseData(params);
+    }
+};
+
+bool operator==(const MIDI_event_ex_t& lhs, const MIDI_event_ex_t& rhs) {
+    if (lhs.midi_message[0] == rhs.midi_message[0] && lhs.midi_message[1] == rhs.midi_message[1] && lhs.midi_message[2] == rhs.midi_message[2] && lhs.midi_message[3] == rhs.midi_message[3])
+        return true;
+    return false;
+}
+
+bool operator!=(const MIDI_event_ex_t& lhs, const MIDI_event_ex_t& rhs) {
+    if (lhs == rhs)
+        return false;
+    return true;
+}
+
 #endif /* control_surface_midi_widgets_h */
 
 

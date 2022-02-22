@@ -289,6 +289,9 @@ private:
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     int currentRGBIndex_ = 0;
+
+    bool supportsZoneFeedback_ = false;
+    vector<string> FeedBackData_;
     
     bool supportsTrackColor_ = false;
         
@@ -629,6 +632,7 @@ public:
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
     void UpdateRGBValue(int r, int g, int b);
+    void UpdateDataValue(vector<string> feedbackData);
     void ForceValue(double value);
     void ForceRGBValue(int r, int g, int b);
     void ClearCache();
@@ -722,6 +726,7 @@ public:
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
     virtual void SetRGBValue(int r, int g, int b) {}
+    virtual void SetDataValue(vector<string> FeedbackData) {}
     virtual void ForceValue() {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
