@@ -1,0 +1,65 @@
+name: Build 
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+jobs:
+  build_win:
+  
+    strategy:
+      matrix:
+          targetplatform: [x64, x86]
+
+    runs-on:  windows-2019
+    
+    steps:
+      - name: Checkout src
+        uses: actions/checkout@v2
+      
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v1.1
+        
+      - name: Build src
+        run: |
+          msbuild visualstudio\reaper_csurf_integrator.vcxproj `
+          -verbosity:minimal `
+          -t:rebuild `
+          /p:Configuration=Release `
+          /p:Platform=${{ matrix.targetplatform }}    
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Extensions
+          path: reaper_csurf_integrator*.dll
+          
+
+  build_macos:
+
+    runs-on:  macos-latest
+    
+    steps:
+    
+      - name: Checkout src
+        uses: actions/checkout@v2
+      
+      - name: Setup XCode Build
+        uses: mxcl/xcodebuild@v1
+        with:
+          platform: macOS
+          action: build 
+          configuration: Release
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Extensions  
+          path: reaper_csurf_integrator.dylib
