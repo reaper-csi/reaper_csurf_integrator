@@ -281,6 +281,7 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
     }
     catch (exception &e)
     {
+        (void)e;  // Removes C4101 warning
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
@@ -340,7 +341,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     vector<Navigator*> navigators;
                     
-                    NavigationStyle navigationStyle = Standard;
+                    NavigationStyle navigationStyle = NavigationStyle::Standard;
                     
                     if(navigatorName == "")
                         navigators.push_back(surface->GetPage()->GetDefaultNavigator());
@@ -375,28 +376,28 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = SendSlot;
+                        navigationStyle = NavigationStyle::SendSlot;
                     }
                     else if(navigatorName == "TrackReceiveSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = ReceiveSlot;
+                        navigationStyle = NavigationStyle::ReceiveSlot;
                     }
                     else if(navigatorName == "TrackFXMenuSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = FXMenuSlot;
+                        navigationStyle = NavigationStyle::FXMenuSlot;
                     }
                     else if(navigatorName == "SelectedTrackSendSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumSendSlots(); i++)
                         {
                             navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
-                            navigationStyle = SelectedTrackSendSlot;
+                            navigationStyle = NavigationStyle::SelectedTrackSendSlot;
                         }
                     }
                     else if(navigatorName == "SelectedTrackReceiveSlotNavigator")
@@ -404,7 +405,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
                         {
                             navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
-                            navigationStyle = SelectedTrackReceiveSlot;
+                            navigationStyle = NavigationStyle::SelectedTrackReceiveSlot;
                         }
                     }
 
@@ -606,6 +607,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
     }
     catch (exception &e)
     {
+        (void)e;  // Removes C4101 warning
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
@@ -1020,6 +1022,7 @@ static void ProcessWidgetFile(string filePath, ControlSurface* surface)
     }
     catch (exception &e)
     {
+        (void)e;  // Removes C4101 warning
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
@@ -1284,6 +1287,7 @@ void Manager::Init()
     }
     catch (exception &e)
     {
+        (void)e;  // Removes C4101 warning
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
@@ -1806,17 +1810,17 @@ vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
 
 int Zone::GetSlotIndex()
 {
-    if(navigationStyle_ == Standard)
+    if(navigationStyle_ == NavigationStyle::Standard)
         return slotIndex_;
-    else if(navigationStyle_ == SendSlot)
+    else if(navigationStyle_ == NavigationStyle::SendSlot)
         return surface_->GetPage()->GetSendSlot();
-    else if(navigationStyle_ == ReceiveSlot)
+    else if(navigationStyle_ == NavigationStyle::ReceiveSlot)
         return surface_->GetPage()->GetReceiveSlot();
-    else if(navigationStyle_ == FXMenuSlot)
+    else if(navigationStyle_ == NavigationStyle::FXMenuSlot)
         return surface_->GetPage()->GetFXMenuSlot();
-    else if(navigationStyle_ == SelectedTrackSendSlot)
+    else if(navigationStyle_ == NavigationStyle::SelectedTrackSendSlot)
         return slotIndex_ + surface_->GetPage()->GetSendSlot();
-    else if(navigationStyle_ == SelectedTrackReceiveSlot)
+    else if(navigationStyle_ == NavigationStyle::SelectedTrackReceiveSlot)
         return slotIndex_ + surface_->GetPage()->GetReceiveSlot();
     else
         return 0;
@@ -2101,6 +2105,7 @@ void ControlSurface::InitZones(string zoneFolder)
     }
     catch (exception &e)
     {
+        (void)e;  // Removes C4101 warning
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
@@ -2722,7 +2727,7 @@ void Midi_ControlSurface::InitializeMCU()
     struct
     {
         MIDI_event_ex_t evt;
-        char data[BUFSZ];
+        char data[BUFSZ]{};
     } midiSysExData;
     
     for(auto line : sysExLines)
@@ -2758,7 +2763,7 @@ void Midi_ControlSurface::InitializeMCUXT()
     struct
     {
         MIDI_event_ex_t evt;
-        char data[BUFSZ];
+        char data[BUFSZ]{};
     } midiSysExData;
     
     for(auto line : sysExLines)
