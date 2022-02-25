@@ -322,7 +322,7 @@
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -336,7 +336,7 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "/Users/geoffwaddington/Library/Application Support/REAPER/UserPlugins";
+				DSTROOT = "$Home/Library/Application Support/REAPER/UserPlugins";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = /;
