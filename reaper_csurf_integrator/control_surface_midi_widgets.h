@@ -445,7 +445,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[64];
+            char data[64]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset = 0;
@@ -783,7 +783,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         midiSysExData.evt.frame_offset=0;
         midiSysExData.evt.size=0;
@@ -1134,7 +1134,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1215,7 +1215,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1269,7 +1269,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1351,7 +1351,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1435,7 +1435,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1492,7 +1492,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         
         midiSysExData.evt.frame_offset=0;
@@ -1556,7 +1556,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         }
         midiSysExData;
         
@@ -1632,7 +1632,7 @@ public:
         struct
         {
             MIDI_event_ex_t evt;
-            char data[512];
+            char data[512]{};
         } midiSysExData;
         midiSysExData.evt.frame_offset=0;
         midiSysExData.evt.size=0;

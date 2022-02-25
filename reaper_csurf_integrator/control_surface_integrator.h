@@ -34,7 +34,7 @@
 
 #ifdef _WIN32
 #include <memory>
-#include "direntWin.h"
+#include "dirent.h"
 #include <functional>
 #include "commctrl.h"
 #else
@@ -65,7 +65,7 @@ const string TabChars = "[\t]";
 
 const int TempDisplayTime = 1250;
 
-enum NavigationStyle
+enum class NavigationStyle
 {
     Standard,
     SendSlot,
@@ -478,7 +478,7 @@ private:
         
     map<string, bool> activeTouchIds_;
     
-    NavigationStyle const navigationStyle_ = Standard;
+    NavigationStyle const navigationStyle_ = NavigationStyle::Standard;
     
     int slotIndex_ = 0;
 

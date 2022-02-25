@@ -58,6 +58,7 @@ public:
     static void SwapBufsPrecise(midi_Input* midiInput)
     {
     #ifndef timeGetTime
+            #pragma warning(suppress : 28159)  //remove GetTickCount() warning
             midiInput->SwapBufsPrecise(GetTickCount(), GetTickCount());
     #else
             midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
@@ -67,6 +68,7 @@ public:
     static double GetCurrentNumberOfMilliseconds()
     {
     #ifndef timeGetTime
+            #pragma warning(suppress : 28159)
             return GetTickCount();
     #else
             return timeGetTime();

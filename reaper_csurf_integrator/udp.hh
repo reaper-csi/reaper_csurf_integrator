@@ -344,7 +344,7 @@ private:
 
     for (rp = result; rp && handle==-1; rp = rp->ai_next) {
  
-
+      #pragma warning(suppress : 4244)
       handle = socket(rp->ai_family, rp->ai_socktype,
                       rp->ai_protocol);
       if (handle == -1)
