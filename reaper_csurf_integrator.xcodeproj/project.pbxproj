@@ -20,19 +20,6 @@
 		036D522A20272890005FD920 /* direntWin.h in Headers */ = {isa = PBXBuildFile; fileRef = 036D522920272890005FD920 /* direntWin.h */; };
 		037FB6771EB8C96C0012F4C1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 037FB6761EB8C96C0012F4C1 /* Carbon.framework */; };
 		03C7D8BB1EB78AF500DBBD98 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */; };
-		EADCC0F127C7EDC600BC4CC1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0310E4C81EB5403C00040D1A /* main.cpp */; };
-		EADCC0F227C7EDC600BC4CC1 /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0310E4D31EB5405900040D1A /* swell-modstub.mm */; };
-		EADCC0F327C7EDC600BC4CC1 /* control_surface_integrator_ui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 03644D1D1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp */; };
-		EADCC0F427C7EDC600BC4CC1 /* control_surface_integrator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0310E4C61EB5403C00040D1A /* control_surface_integrator.cpp */; };
-		EADCC0F627C7EDC600BC4CC1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 037FB6761EB8C96C0012F4C1 /* Carbon.framework */; };
-		EADCC0F727C7EDC600BC4CC1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */; };
-		EADCC0F927C7EDC600BC4CC1 /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 0355636A1F814C0600583062 /* reaper_plugin_functions.h */; };
-		EADCC0FA27C7EDC600BC4CC1 /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CB1EB5403C00040D1A /* resource.h */; };
-		EADCC0FB27C7EDC600BC4CC1 /* reaper_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CA1EB5403C00040D1A /* reaper_plugin.h */; };
-		EADCC0FC27C7EDC600BC4CC1 /* direntWin.h in Headers */ = {isa = PBXBuildFile; fileRef = 036D522920272890005FD920 /* direntWin.h */; };
-		EADCC0FD27C7EDC600BC4CC1 /* oscpkt.hh in Headers */ = {isa = PBXBuildFile; fileRef = 0326FA6C2122E6C3000D5794 /* oscpkt.hh */; };
-		EADCC0FE27C7EDC600BC4CC1 /* control_surface_integrator.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4C71EB5403C00040D1A /* control_surface_integrator.h */; };
-		EADCC0FF27C7EDC600BC4CC1 /* udp.hh in Headers */ = {isa = PBXBuildFile; fileRef = 0326FA6B2122E6C3000D5794 /* udp.hh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,7 +36,7 @@
 		0310E4D31EB5405900040D1A /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "WDL/swell/swell-modstub.mm"; sourceTree = "<group>"; };
 		0326FA6B2122E6C3000D5794 /* udp.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = udp.hh; sourceTree = "<group>"; };
 		0326FA6C2122E6C3000D5794 /* oscpkt.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = oscpkt.hh; sourceTree = "<group>"; };
-		03464AE01EB53E7A00EAD095 /* Debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = Debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		03464AE01EB53E7A00EAD095 /* Library.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = Library.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0352CFFE1FD95CDE002AE18C /* res.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc; sourceTree = "<group>"; };
 		0355636A1F814C0600583062 /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reaper_plugin_functions.h; sourceTree = "<group>"; };
 		0362B03B1FD80DD500E37C2F /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc_mac_menu; sourceTree = "<group>"; };
@@ -62,7 +49,6 @@
 		0393E6B11F7501F100BC2E2E /* handy_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = handy_functions.h; sourceTree = "<group>"; };
 		03AE6F382399128800BA6EDF /* ReportLoggingEtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReportLoggingEtc.h; sourceTree = "<group>"; };
 		03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
-		EADCC10327C7EDC600BC4CC1 /* Release.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = Release.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,15 +58,6 @@
 			files = (
 				037FB6771EB8C96C0012F4C1 /* Carbon.framework in Frameworks */,
 				03C7D8BB1EB78AF500DBBD98 /* Cocoa.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		EADCC0F527C7EDC600BC4CC1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				EADCC0F627C7EDC600BC4CC1 /* Carbon.framework in Frameworks */,
-				EADCC0F727C7EDC600BC4CC1 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -99,8 +76,7 @@
 		03464AE11EB53E7A00EAD095 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				03464AE01EB53E7A00EAD095 /* Debug.dylib */,
-				EADCC10327C7EDC600BC4CC1 /* Release.dylib */,
+				03464AE01EB53E7A00EAD095 /* Library.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -161,26 +137,12 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		EADCC0F827C7EDC600BC4CC1 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				EADCC0F927C7EDC600BC4CC1 /* reaper_plugin_functions.h in Headers */,
-				EADCC0FA27C7EDC600BC4CC1 /* resource.h in Headers */,
-				EADCC0FB27C7EDC600BC4CC1 /* reaper_plugin.h in Headers */,
-				EADCC0FC27C7EDC600BC4CC1 /* direntWin.h in Headers */,
-				EADCC0FD27C7EDC600BC4CC1 /* oscpkt.hh in Headers */,
-				EADCC0FE27C7EDC600BC4CC1 /* control_surface_integrator.h in Headers */,
-				EADCC0FF27C7EDC600BC4CC1 /* udp.hh in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		03464ADF1EB53E7A00EAD095 /* Debug */ = {
+		03464ADF1EB53E7A00EAD095 /* Library */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 03464AE91EB53E7A00EAD095 /* Build configuration list for PBXNativeTarget "Debug" */;
+			buildConfigurationList = 03464AE91EB53E7A00EAD095 /* Build configuration list for PBXNativeTarget "Library" */;
 			buildPhases = (
 				03464ADC1EB53E7A00EAD095 /* Sources */,
 				03464ADD1EB53E7A00EAD095 /* Frameworks */,
@@ -190,26 +152,9 @@
 			);
 			dependencies = (
 			);
-			name = Debug;
+			name = Library;
 			productName = reaper_csurf_integrator;
-			productReference = 03464AE01EB53E7A00EAD095 /* Debug.dylib */;
-			productType = "com.apple.product-type.library.dynamic";
-		};
-		EADCC0EF27C7EDC600BC4CC1 /* Release */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = EADCC10027C7EDC600BC4CC1 /* Build configuration list for PBXNativeTarget "Release" */;
-			buildPhases = (
-				EADCC0F027C7EDC600BC4CC1 /* Sources */,
-				EADCC0F527C7EDC600BC4CC1 /* Frameworks */,
-				EADCC0F827C7EDC600BC4CC1 /* Headers */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = Release;
-			productName = reaper_csurf_integrator;
-			productReference = EADCC10327C7EDC600BC4CC1 /* Release.dylib */;
+			productReference = 03464AE01EB53E7A00EAD095 /* Library.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
 /* End PBXNativeTarget section */
@@ -241,8 +186,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				03464ADF1EB53E7A00EAD095 /* Debug */,
-				EADCC0EF27C7EDC600BC4CC1 /* Release */,
+				03464ADF1EB53E7A00EAD095 /* Library */,
 			);
 		};
 /* End PBXProject section */
@@ -256,17 +200,6 @@
 				0310E4D41EB5405900040D1A /* swell-modstub.mm in Sources */,
 				03644D1E1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp in Sources */,
 				0310E4CD1EB5403C00040D1A /* control_surface_integrator.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		EADCC0F027C7EDC600BC4CC1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				EADCC0F127C7EDC600BC4CC1 /* main.cpp in Sources */,
-				EADCC0F227C7EDC600BC4CC1 /* swell-modstub.mm in Sources */,
-				EADCC0F327C7EDC600BC4CC1 /* control_surface_integrator_ui.cpp in Sources */,
-				EADCC0F427C7EDC600BC4CC1 /* control_surface_integrator.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,57 +362,7 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
 				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "/Users/geoffwaddington/Library/Application Support/REAPER/UserPlugins";
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = /;
-				ENABLE_STRICT_OBJC_MSGSEND = NO;
-				EXECUTABLE_PREFIX = "";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				INFOPLIST_PREPROCESS = NO;
-				INFOPLIST_PREPROCESSOR_DEFINITIONS = "";
-				INSTALL_PATH = /;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		EADCC10127C7EDC600BC4CC1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CLANG_CXX_LIBRARY = "compiler-default";
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
-				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
-				DEPLOYMENT_LOCATION = NO;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = /;
-				ENABLE_STRICT_OBJC_MSGSEND = NO;
-				EXECUTABLE_PREFIX = "";
-				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
-				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
-				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
-				INFOPLIST_PREPROCESS = NO;
-				INFOPLIST_PREPROCESSOR_DEFINITIONS = "";
-				INSTALL_PATH = /;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		EADCC10227C7EDC600BC4CC1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CLANG_CXX_LIBRARY = "compiler-default";
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
-				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
-				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = /;
@@ -508,20 +391,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		03464AE91EB53E7A00EAD095 /* Build configuration list for PBXNativeTarget "Debug" */ = {
+		03464AE91EB53E7A00EAD095 /* Build configuration list for PBXNativeTarget "Library" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				03464AEA1EB53E7A00EAD095 /* Debug */,
 				03464AEB1EB53E7A00EAD095 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		EADCC10027C7EDC600BC4CC1 /* Build configuration list for PBXNativeTarget "Release" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				EADCC10127C7EDC600BC4CC1 /* Debug */,
-				EADCC10227C7EDC600BC4CC1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
