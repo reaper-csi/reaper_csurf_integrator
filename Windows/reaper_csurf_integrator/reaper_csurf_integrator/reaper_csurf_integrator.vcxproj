@@ -84,6 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions) _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <PreBuildEvent>
       <Command>taskkill /f /fi "imagename eq Reaper.exe"</Command>
@@ -119,6 +120,7 @@ powershell start-process "'$(DevReaperPath)\reaper.exe'"
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions) _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
+      <DisableSpecificWarnings>4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -138,13 +140,8 @@ powershell start-process "'$(DevReaperPath)\reaper.exe'"
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_manager_actions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_midi_widgets.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_Reaper_actions.h" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\dirent.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\handy_functions.h" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\oscpkt.hh" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin.h" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin_functions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\resource.h" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\udp.hh" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc" />

@@ -29,15 +29,6 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin_functions.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\resource.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_manager_actions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -53,25 +44,19 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator_ui.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\oscpkt.hh">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\udp.hh">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\reaper_csurf_integrator\handy_functions.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_action_contexts.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\dirent.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
