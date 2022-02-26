@@ -1906,7 +1906,7 @@ public:
             if(navigator->GetIsChannelPinned())
             {
                 if(DAW::ValidateTrackPtr(navigator->GetTrack()))
-                    remove(tracks_.begin(), tracks_.end(), navigator->GetTrack());
+                    void(remove(tracks_.begin(), tracks_.end(), navigator->GetTrack()));
                 else
                     navigator->UnpinChannel();
             }
