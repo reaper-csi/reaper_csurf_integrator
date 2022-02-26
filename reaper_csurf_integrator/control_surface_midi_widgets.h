@@ -2025,7 +2025,7 @@ public:
         }
     }
 
-    virtual void SetDataValue(vector<string> params) {
+    virtual void SetDataValue(vector<string> params) override {
         ParseData(params);
     }
 };
