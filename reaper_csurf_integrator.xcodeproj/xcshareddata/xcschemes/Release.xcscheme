@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "03464ADF1EB53E7A00EAD095"
-               BuildableName = "Library.dylib"
+               BuildableName = "reaper_csurf_integrator.dylib"
                BlueprintName = "reaper_csurf_integrator"
                ReferencedContainer = "container:reaper_csurf_integrator.xcodeproj">
             </BuildableReference>
