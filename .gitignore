@@ -1,34 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Marketplace
-Explore
-@mavriq-dev
-GeoffAWaddington /
-CSICode
-Public
-
-Code
-Issues
-Pull requests 1
-Actions
-Projects
-Wiki
-Security
-
-    Insights
-
-CSICode/.gitignore
-This commit does not belong to any branch on this repository, and may belong to a fork outside of the repository.
-@mavriq-dev
-mavriq-dev Updated gitignore for VS and XCode
-Latest commit 077f625 yesterday
-History
-2 contributors
-@GeoffAWaddington
-@mavriq-dev
-435 lines (345 sloc) 7.04 KB
 # Prerequisites
 *.d
 
@@ -61,13 +30,13 @@ History
 *.exe
 *.out
 *.app
-#reaper_csurf_integrator.xcodeproj/project.xcworkspace/xcuserdata/geoffwaddington.xcuserdatad/UserInterfaceState.xcuserstate
-#reaper_csurf_integrator.xcodeproj/xcuserdata/geoffwaddington.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist
 
 ## User settings for XCode
 xcuserdata/
 
+## VS Build Directory
 
+visual studio/VS_Build/
 
 # User-specific files
 *.rsuser
