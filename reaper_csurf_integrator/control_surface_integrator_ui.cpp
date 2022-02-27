@@ -993,6 +993,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             // the messages above don't trigger the user-initiated code, so pretend the user selected them
             SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDC_LIST_Pages, LBN_SELCHANGE), 0);
+
+
         }
         break;
         
@@ -1062,7 +1064,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
         }
         break;
     }
-    
     return 0;
 }
 
