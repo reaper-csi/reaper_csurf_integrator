@@ -35,6 +35,7 @@
 #define IDC_EDIT_NumSends               1086
 #define IDC_EDIT_NumFX                  1087
 #define IDC_EDIT_ChannelOffset          1088
+#define IDC_STATIC_Version              1092
 
 // Next default values for new objects
 // 
@@ -42,7 +43,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1090
+#define _APS_NEXT_CONTROL_VALUE         1093
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

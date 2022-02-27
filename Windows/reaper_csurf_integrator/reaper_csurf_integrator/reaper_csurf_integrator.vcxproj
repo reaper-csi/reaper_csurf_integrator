@@ -146,6 +146,10 @@ powershell start-process "'$(DevReaperPath)\reaper.exe'"
   <ItemGroup>
     <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\reaper_csurf_integrator\res.rc_mac_dlg" />
+    <None Include="..\..\..\reaper_csurf_integrator\res.rc_mac_menu" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
