@@ -29,25 +29,12 @@ jobs:
         
       - name: Build src
         run: |
-          msbuild Windows\reaper_csurf_integrator\reaper_csurf_integrator\reaper_csurf_integrator.vcxproj `
+          msbuild visualstudio\reaper_csurf_integrator.vcxproj `
           -verbosity:minimal `
           -t:rebuild `
           /p:Configuration=Release `
-          /p:Platform=${{ matrix.targetplatform }}
+          /p:Platform=${{ matrix.targetplatform }}    
       
-      - name: Move x64 file
-        if : ${{ matrix.targetplatform == 'x64' }} 
-        run: |
-          mv Windows\reaper_csurf_integrator\reaper_csurf_integrator\x64\Release\reaper_csurf_integrator.dll `
-          reaper_csurf_integrator64.dll
-          
-      - name: Move x86 file
-        if : ${{ matrix.targetplatform == 'x86' }} 
-        run: |
-          mv Windows\reaper_csurf_integrator\reaper_csurf_integrator\Release\reaper_csurf_integrator.dll `
-          reaper_csurf_integrator.dll         
-
-          
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
