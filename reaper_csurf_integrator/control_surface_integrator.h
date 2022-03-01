@@ -34,7 +34,7 @@
 
 #ifdef _WIN32
 #include <memory>
-#include "direntWin.h"
+#include "dirent.h"
 #include <functional>
 #include "commctrl.h"
 #else
@@ -65,7 +65,7 @@ const string TabChars = "[\t]";
 
 const int TempDisplayTime = 1250;
 
-enum NavigationStyle
+enum class NavigationStyle
 {
     Standard,
     SendSlot,
@@ -289,6 +289,9 @@ private:
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     int currentRGBIndex_ = 0;
+
+    bool supportsZoneFeedback_ = false;
+    vector<string> FeedBackData_;
     
     bool supportsTrackColor_ = false;
         
@@ -475,7 +478,7 @@ private:
         
     map<string, bool> activeTouchIds_;
     
-    NavigationStyle const navigationStyle_ = Standard;
+    NavigationStyle const navigationStyle_ = NavigationStyle::Standard;
     
     int slotIndex_ = 0;
 
@@ -629,6 +632,7 @@ public:
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
     void UpdateRGBValue(int r, int g, int b);
+    void UpdateDataValue(vector<string> feedbackData);
     void ForceValue(double value);
     void ForceRGBValue(int r, int g, int b);
     void ClearCache();
@@ -722,6 +726,7 @@ public:
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
     virtual void SetRGBValue(int r, int g, int b) {}
+    virtual void SetDataValue(vector<string> FeedbackData) {}
     virtual void ForceValue() {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
@@ -1901,7 +1906,7 @@ public:
             if(navigator->GetIsChannelPinned())
             {
                 if(DAW::ValidateTrackPtr(navigator->GetTrack()))
-                    remove(tracks_.begin(), tracks_.end(), navigator->GetTrack());
+                    void(remove(tracks_.begin(), tracks_.end(), navigator->GetTrack()));
                 else
                     navigator->UnpinChannel();
             }
