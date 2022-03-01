@@ -1,12 +1,9 @@
 ![License](https://img.shields.io/github/license/reaper-csi/reaper_csurf_integrator)
 ![Relase Build](https://img.shields.io/github/workflow/status/reaper-csi/reaper_csurf_integrator/Build?label=release%20build)
-![Mavriq-Dev Build](https://img.shields.io/github/workflow/status/reaper-csi/reaper_csurf_integrator/Build/mavriq-dev?label=mavriq-dev%20build)
 ![Code Size](https://img.shields.io/github/languages/code-size/reaper-csi/reaper_csurf_integrator)
 ![Repo Size](https://img.shields.io/github/repo-size/reaper-csi/reaper_csurf_integrator)
 ![Release Ver](https://img.shields.io/github/v/release/reaper-csi/reaper_csurf_integrator)
 ![Prerelase Ver](https://img.shields.io/github/v/release/reaper-csi/reaper_csurf_integrator?include_prereleases)
-![Repo Size](https://img.shields.io/github/repo-size/reaper-csi/reaper_csurf_integrator)
-![Repo Size](https://img.shields.io/github/repo-size/reaper-csi/reaper_csurf_integrator)
 
 # Control Surface Integration (CSI) Project
 
