@@ -23,6 +23,23 @@ jobs:
     steps:
       - name: Checkout src
         uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+        
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: '5.x'
+         
+      - name: Use GitVersion
+        id: gitversion # step id used as reference for output values
+        uses: gittools/actions/gitversion/execute@v0.9.7        
+          
+      - name: Modify version number
+        run: "sed -i 's/Version: 0.0.0/version:  ${{ steps.gitversion.outputs.fullSemVer }}/' reaper_csurf_integrator/res.rc"
+        
+      - name: Print File
+        run: "cat reaper_csurf_integrator/res.rc"
       
       - name: Setup MSBuild path
         uses: microsoft/setup-msbuild@v1.1
@@ -50,6 +67,23 @@ jobs:
     
       - name: Checkout src
         uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+          
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: '5.x'
+        
+      - name: Use GitVersion
+        id: gitversion # step id used as reference for output values
+        uses: gittools/actions/gitversion/execute@v0.9.7        
+          
+      - name: Modify version number
+        run: "sed -i '' 's/Version: 0.0.0/version:  ${{ steps.gitversion.outputs.fullSemVer }}/' reaper_csurf_integrator/res.rc_mac_dlg"
+        
+      - name: Print File
+        run: "cat reaper_csurf_integrator/res.rc_mac_dlg"
       
       - name: Setup XCode Build
         uses: mxcl/xcodebuild@v1
